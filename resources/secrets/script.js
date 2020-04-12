@@ -1,3 +1,9 @@
+function escape_html(string){
+	var elem = document.createElement("p");
+	elem.appendChild(document.createTextNode(string));
+	return elem.innerHTML;
+}
+
 function create_qr(msg, darkMode){
 	var arg = msg;
 	if(darkMode){
@@ -52,8 +58,8 @@ function get_form(e, key_size){
 		if(this.readyState === XMLHttpRequest.DONE){
 			if(this.status === 200){
 				var content = document.getElementById("content");
-				var html = "<input type='text' id='url' value='"+read_url+"' onfocus='this.select()'>";
-				html += "<button onclick='toggle_qr(this)'>Show Qr Code</button>";
+				var html = "<input class='fill' type='text' id='url' value='"+read_url+"' onfocus='this.select()'>";
+				html += "<button onclick='toggle_qr(this)' class='padding'>Show Qr Code</button>";
 				html += "<div id='qrcode' class='hidden'></div>";
 				content.innerHTML = html;
 				create_qr(read_url, true); 
@@ -103,13 +109,19 @@ function fetch_note(){
 	request.setRequestHeader("Content-Type", "Application/x-www-form-urlencoded");
 
 	request.onreadystatechange = function(){
-		if(this.readyState === XMLHttpRequest.DONE && this.status == 200){
+		if(this.readyState === XMLHttpRequest.DONE){
 			var res = JSON.parse(this.response);
-			var msg = CryptoJS.enc.Latin1.stringify(CryptoJS.AES.decrypt(res["note"], keys["key"]));
-			var msg = LZString.decompressFromBase64(msg);
-			var content = document.getElementById("content");
-			content.innerHTML = "<textarea id='output'></textarea>";
-			document.getElementById("output").textContent = msg;
+			if(this.status == 200){
+				var msg = CryptoJS.enc.Latin1.stringify(CryptoJS.AES.decrypt(res["note"], keys["key"]));
+				var msg = LZString.decompressFromBase64(msg);
+				var content = document.getElementById("content");
+				content.innerHTML = "<div class='fill note' id='output' readonly onfocus='this.select()'></div>";
+				var output = document.getElementById("output");
+				output.innerHTML = escape_html(msg);
+			}else{
+				var content = document.getElementById("content");
+				content.insertAdjacentHTML("afterbegin", "<div class='notice error'>"+res.message+" Verify URL, or key. </div>");
+			}
 		}
 	}
 

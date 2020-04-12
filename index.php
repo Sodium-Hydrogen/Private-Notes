@@ -26,19 +26,21 @@ if(strlen($framework_path) > 1){
 	$sql_pass = $_SESSION["dbPass"];
 	$sql_db = $_SESSION["db"];
 
-	if(!isset($_SESSION["secrets_max_size"])){
-		create_config('secrets_max_size', intval($max_size), 'INT', 'The maximum base64 character count of the encoded string');
-		create_config('secrets_timeout', intval($days_timeout), 'INT', 'The count in days that a note will be left in the database before being removed.');
-		create_config('secrets_id_size', intval($id_size), 'INT', 'Size of the id automatically generated.');
-		create_config('secrets_key_size', intval($key_size), 'INT', 'Size of the key automatically generated.');
-		create_config('secrets_table_name', $table_name, 'STRING', 'The table name for secretes to save info into.');
+	if(!isset($_SESSION["s_notes_max_size"])){
+		create_config('s_notes_max_size', intval($max_size), 'INT', 'The maximum base64 character count of the encoded string');
+		create_config('s_notes_timeout', intval($days_timeout), 'INT', 'The count in days that a note will be left in the database before being removed.');
+		create_config('s_notes_id_size', intval($id_size), 'INT', 'Size of the id automatically generated.');
+		create_config('s_notes_key_size', intval($key_size), 'INT', 'Size of the key automatically generated.');
+		create_config('s_notes_table_name', $table_name, 'STRING', 'The table name for secretes to save info into.');
 	}
 
-	$max_size = $_SESSION["secrets_max_size"];
-	$days_timeout = $_SESSION["secrets_timeout"];
-	$id_size = $_SESSION["secrets_id_size"];
-	$key_size = $_SESSION["secrets_key_size"];
-	$table_name = $_SESSION["secrets_table_name"];
+	$max_size = $_SESSION["s_notes_max_size"];
+	$days_timeout = $_SESSION["s_notes_timeout"];
+	$id_size = $_SESSION["s_notes_id_size"];
+	$key_size = $_SESSION["s_notes_key_size"];
+	$table_name = $_SESSION["s_notes_table_name"];
+
+	setcookie("PHPSESSID", "", 0);
 
 }else{
 	
@@ -62,18 +64,19 @@ if($_SERVER["REQUEST_METHOD"] == "GET"){
 <!DOCTYPE html>
 <html lang='en'>
 <head>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Secure Notes</title>
-	<link rel='stylesheet' href='/resources/secrets/style.css'>
-	<script src="/resources/qrcodejs/qrcode.js"></script>
-	<script src="/resources/lz-string/libs/lz-string.js"></script>
-	<script src="/resources/crypto-js/crypto-js.js"></script>
-	<script src="/resources/secrets/script.js"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel='stylesheet' type="text/css" href='/resources/secrets/style.css' integrity="sha256-3bHFZ+6tHTBkdhDx2eBfApf7xfFpM2H9FMvqGkfYWjg=">
+	<script type="application/javascript" src="/resources/qrcodejs/qrcode.js" integrity="sha256-Puct6facZo+VZzY6k1jflVlguukADZ69ZkFGcPiOhzU="></script>
+	<script type="application/javascript" src="/resources/lz-string/libs/lz-string.js" integrity="sha256-VKnqrEjU/F8ZC4hVDG+ULG96+VduFx/l3iTBag26gsM="></script>
+	<script type="application/javascript" src="/resources/crypto-js/crypto-js.js" integrity="sha256-u605MhHOcevkqVw8DJ2q3X7kZTVTVXot4PjxIucLiMM="></script>
+	<script type="application/javascript" src="/resources/secrets/script.js" integrity="sha256-wg/WXYgZzXO32Dz+3KS6VI+NThKdzCo68BF+Gqsf4qQ="></script>
 </head>
-<body style="background-color: black;color: white">
+<body>
 	<div class='header'>
 		<div class='title'><a href="<?php echo $path;?>">Self Destructing Notes</a></div>
 		<div class='menu'>
+			<a href="<?php echo $path?>">New Note</a>
 			<a href="<?php echo $path?>?about">About</a>
 		</div>
 	</div>
@@ -94,21 +97,70 @@ if($_SERVER["REQUEST_METHOD"] == "GET"){
 				http_response_code(404);
 				echo "<div class='notice'>Unable to find note.</div>";
 			}
-		}else{
+		}else if(empty($_SERVER["QUERY_STRING"])){
 			$id = secure_key($id_size);
 			?>	
 			<form onsubmit="return get_form(this, <?php echo $key_size ?>);">
-				<textarea name='note' placeholder="Enter secrets"></textarea>
+				<textarea class="fill" name="note" placeholder="Enter secrets"></textarea>
 				<input type="hidden" name="id" value="<?php echo $id ?>"/>
-				<input type="submit" />
+				<div class="row fill">
+					<span>Optional Password: <input type="text" name="op" /></span>
+					<input type="submit" value="Submit Note"/>
+				</div>
 			</form>
 			<?php	
+		}else if(isset($_GET["about"])){ ?>
+			<div class="fill left-align">
+				<h2>About <?php echo $_SERVER["SERVER_NAME"] ?></h2>
+				<p> This is an open source destructing notes website. Any note is destroyed after being read for the first time and all
+				information is hidden from the server and will atomatically expire <?php echo $days_timeout ?> days after being created.</p>
+				<!-- <h3>Is my data safe?</h3>
+				<p>Mostly. There is no garuntee in complete security, but this site uses AES in CBC mode with a 256 bit HMAC encrypted key
+				before being saved. Or in laymans terms, the data is encrypted with a NSA approved algorigthm that for worst case would take
+				longer than the world has been around to guess the correct key to decrypt the message.</p>
+				<p>As long as the code hasn't been modified what you send should be relatively safe. However since anyone can run this code
+				a malisous server admin may write some code to steal the note before being saved and if you know how to program you can read
+				the code just to make sure or send a test note and watch the network requests to see what information is sent.</p>
+				<h3>How does it work?</h3>
+				<p>The site encrypts the message using AES in the browser then sends only the encrypted message and a SHA256 fingerprint of
+				the key and id combined so the server doesn't know what the decryption key is. The key is provided in the url as a hash value
+				which is never sent to the server.</p>
+				!-->
+				<h3>Security</h3>
+				<p>All notes are encrypted using AES in CBC mode with a 256 bit SHA HMAC key in the browser then a SHA-256 fingerprint is created
+				from the id and passphrase combination then the encrypted message and fingerprint are sent to the server. When a note is requested
+				from the server the server will only return the encrypted note if both the id and fingerprint match. Before the note is sent to the
+				browser the encypted message is overwritten with random information then deleted. After the deletion the note is sent and decrypted
+				in the browser and displayed.</p>
+				<h3>One time view</h3>
+				<p>Every note is destroyed from the filesystem before it is sent to the browser and if the note is ever requested again this site
+				will return a 404 not found error.</p>
+				<h3>Expiration</h3>
+				<p>To ensure safety each note is tagged with an expiration date when the server saves it and after the expiration the note is
+				destroyed and will no longer be available to view.</p>
+				<p>The expiration is currently set to <?php echo $days_timeout ?> days.
+				<h3>URL</h3>
+				<p>Since each note needs a key to decypt it, when a note is using a generated key that key is provided as a hash value in the url.
+				A hash value is never sent to the server and remains only in the browser to make sure the server will never have enough information
+				to decrypt the note.</p>
+				<h3>Why a fingerprint?</h3>
+				<p>A SHA256 fingerprint is used because as of right now the only way to get the values out of a SHA256 hash is to know what it
+				is, or to brute force every combination until you find what works. The fingerprint is used by the server to ensure that you 
+				have all the correct information before sending the encrypted message to slow down an attacker and protect the message.</p>
+				<h3>Are there backdoors?</h3>
+				<p>Not in the default source code. Make sure you trust the server or you can check the checksum values in the html head against the ones
+				in the source code to make sure none of the external resources have been modified.</p>
+				<p>Additionally you should check the html code to make sure there are no &lt;script&gt;	with any javascript programmed into it.</p>
+				
+			</div>
+		<?php	}else{
+			echo "Error ".$_SERVER["REDIRECT_STATUS"];
 		}
 	?>
 	</div>
-	<div class='footer'>
-		<div class='copyright'>Copyright © <?php echo date(Y) ?> Michael Julander</div>
-		<div class='source'><a href='https://github.com/Sodium-Hydrogen/Private-notes'>Source Code</a></div>
+	<div class="footer">
+		<div class="copyright">Copyright © <?php echo date(Y) ?> Michael Julander</div>
+		<div class="source"><a href="https://github.com/Sodium-Hydrogen/Private-notes">Source Code</a></div>
 	</div>
 </body>
 </html>
