@@ -1,3 +1,4 @@
+## This is still in development ##
 # Self-Destructing End-to-End Encrypted Note Sharing #
 #### [Sample Site](https://secrets.mikej.tech/) ####
 This is a Javascript / PHP e2e encrypted note sharing service that encodes nessesary information about the note into a single easy to share URL.
