@@ -2,7 +2,7 @@
 #### [Sample Site](https://secrets.mikej.tech/) ####
 This is a Javascript / PHP e2e encrypted note sharing service that encodes nessesary information about the note into a single easy to share URL.
 Since this note uses URL hashes the information to decrypt the note is never sent to the server.
-All encryption and sensitive information remains in the browser and the encrypted note __without__ the decryption key is sent to the server.
+All encryption and sensitive information remains in the browser and the encrypted note __without__ the decryption key sent to the server.
 
 For ease of setup it plug and plays with my [framework](https://github.com/Sodium-Hydrogen/PHP-Framework) so all setting can be configured via the framework's interface.
 
@@ -26,3 +26,7 @@ For installation this downloads and uses vetted versions and will only run them 
 | crypto-js/crypto-js.js | 	u605MhHOcevkqVw8DJ2q3X7kZTVTVXot4PjxIucLiMM= |
 | secrets/script.js | 		NxmF615nq4cn2rDeC/G+a9iblJsOvLOrrgcM5Nseoa0= |
 | secrets/style.css | 		8oSW4QhPKEbdBAh8SLtqvRj+hYn2nkqL69mRDjTXEJU= |
+
+
+
+If you find any security holes please open an issue or pull request detailing the hole so it can get patched.
