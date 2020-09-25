@@ -66,13 +66,13 @@ if($_SERVER["REQUEST_METHOD"] == "GET"){
 <head>
 	<title>Secure Notes</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<!--<link rel='stylesheet' type="text/css" href='/resources/secrets/style.css' integrity="sha256-8UuMd+tTlcS/tdOqDyopFZrAX3oicEYQ6CaqqiaOWrg="> !-->
-	<link rel='stylesheet' type="text/css" href='/resources/secrets/style.css' >
+	<link rel='stylesheet' type="text/css" href='/resources/secrets/style.css' integrity="sha256-8oSW4QhPKEbdBAh8SLtqvRj+hYn2nkqL69mRDjTXEJU=">
+	<!-- <link rel='stylesheet' type="text/css" href='/resources/secrets/style.css' > !-->
 	<script type="application/javascript" src="/resources/qrcodejs/qrcode.js" integrity="sha256-Puct6facZo+VZzY6k1jflVlguukADZ69ZkFGcPiOhzU="></script>
 	<script type="application/javascript" src="/resources/lz-string/libs/lz-string.js" integrity="sha256-VKnqrEjU/F8ZC4hVDG+ULG96+VduFx/l3iTBag26gsM="></script>
 	<script type="application/javascript" src="/resources/crypto-js/crypto-js.js" integrity="sha256-u605MhHOcevkqVw8DJ2q3X7kZTVTVXot4PjxIucLiMM="></script>
-	<!--<script type="application/javascript" src="/resources/secrets/script.js" integrity="sha256-cB+XlxFbGyvbUOtsrMuR2WR3PG7ycUpbkSViOvuTsGk="></script>!-->
-	<script type="application/javascript" src="/resources/secrets/script.js" ></script>
+	<script type="application/javascript" src="/resources/secrets/script.js" integrity="sha256-NxmF615nq4cn2rDeC/G+a9iblJsOvLOrrgcM5Nseoa0="></script>
+	<!--<script type="application/javascript" src="/resources/secrets/script.js" ></script> !-->
 </head>
 <body <?php if(isset($_GET["id"])){echo "onload='add_password_box()'";} ?>>
 	<div class='header'>
