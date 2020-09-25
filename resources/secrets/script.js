@@ -4,6 +4,16 @@ function escape_html(string){
 	return elem.innerHTML;
 }
 
+function secret_key(length, keyspace="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"){
+	var key = "";
+	for(var i = 0; i < length; i++){
+		var random = window.crypto.getRandomValues(new Uint32Array(1))[0];
+		random = random / Math.pow(2, 32);
+		random = Math.floor(random * keyspace.length);
+		key += keyspace[random];
+	}
+	return key;
+}
 function create_qr(msg, darkMode){
 	var arg = msg;
 	if(darkMode){
@@ -34,14 +44,26 @@ function get_form(e, key_size){
 		return false;
 	}
 	var id = e.children["id"].value;
+	
+	var key = "";
 
-	var key = CryptoJS.enc.Base64.stringify(CryptoJS.lib.WordArray.random(key_size))
+	if(e.op.value.length == 0){
+		key = secret_key(key_size);
+	}else{
+		key = e.op.value;
+	}
+
 	var hash = CryptoJS.enc.Base64.stringify(CryptoJS.SHA256(id+key));
 	var encrypted = CryptoJS.AES.encrypt(LZString.compressToBase64(note), key).toString();
 
 	var base_url = window.location.origin+window.location.pathname;
 	var save_url = base_url+"?api";
-	var read_url = base_url+"?id="+id+"#"+key;
+	var read_url = base_url+"?id="+id+"#";
+	if(e.op.value.length == 0){
+		read_url += "k"+key;
+	}else{
+		read_url += "p";
+	}
 
 	var params = new URLSearchParams({
 		"action": "save",
@@ -58,7 +80,7 @@ function get_form(e, key_size){
 		if(this.readyState === XMLHttpRequest.DONE){
 			if(this.status === 200){
 				var content = document.getElementById("content");
-				var html = "<input class='fill' type='text' id='url' value='"+read_url+"' onfocus='this.select()'>";
+				var html = "<input class='fill' type='text' id='url' autocomplete='off' value='"+read_url+"' onfocus='this.select()'>";
 				html += "<button onclick='toggle_qr(this)' class='padding'>Show Qr Code</button>";
 				html += "<div id='qrcode' class='hidden'></div>";
 				content.innerHTML = html;
@@ -89,6 +111,13 @@ function get_url_values(){
 		params[item[0]] = item[1];
 	}
 	params["key"] = window.location.hash.substr(1);
+	if(params["key"] == "p"){
+		params["key"] = document.getElementById("op").value;
+	}else if(params["key"][0] == "k"){
+		params["key"] = params["key"].substr(1);
+	}else{
+		params["key"] = "null";
+	}
 	return params;	
 }
 function fetch_note(){
@@ -115,16 +144,40 @@ function fetch_note(){
 				var msg = CryptoJS.enc.Latin1.stringify(CryptoJS.AES.decrypt(res["note"], keys["key"]));
 				var msg = LZString.decompressFromBase64(msg);
 				var content = document.getElementById("content");
-				content.innerHTML = "<div class='fill note' id='output' readonly onfocus='this.select()'></div>";
+				content.innerHTML = "<div class='fill note' id='output' readonly ondblclick='select_text(this.id)'></div>";
 				var output = document.getElementById("output");
 				output.innerHTML = escape_html(msg);
 			}else{
 				var content = document.getElementById("content");
-				content.insertAdjacentHTML("afterbegin", "<div class='notice error'>"+res.message+" Verify URL, or key. </div>");
+				var msg = res.message + " Verify URL or ";
+				if(window.location.hash.substr(1) == "p"){
+					msg += "password.";
+				}else{
+					msg += " key.";
+				}
+				content.insertAdjacentHTML("afterbegin", "<div class='notice error'>"+msg+"</div>");
 			}
 		}
 	}
 
 	request.send(params.toString());
-
 }
+function select_text(id){
+	var range = document.createRange();
+	range.selectNode(document.getElementById(id));
+	window.getSelection().empty();
+	window.getSelection().addRange(range);
+}
+
+function add_password_box(){
+	if(window.location.hash.substr(1) == "p"){
+		var op = document.getElementById("op-box");
+		console.log(op);
+		if(op !== null){
+			op.classList.add("fill");
+			op.classList.add("row");
+			op.insertAdjacentHTML("AfterBegin", "<span>Password: <input type='text' name='op' id='op'></span>");
+		}
+	}
+}
+

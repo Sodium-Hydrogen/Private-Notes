@@ -10,7 +10,7 @@ $max_size = 4096;
 $padding = true;
 $days_timeout = 7;
 $id_size = 10;
-$key_size = 8;
+$key_size = 12;
 
 $table_name = "secrets_notes";
 
@@ -66,13 +66,15 @@ if($_SERVER["REQUEST_METHOD"] == "GET"){
 <head>
 	<title>Secure Notes</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel='stylesheet' type="text/css" href='/resources/secrets/style.css' integrity="sha256-3bHFZ+6tHTBkdhDx2eBfApf7xfFpM2H9FMvqGkfYWjg=">
+	<!--<link rel='stylesheet' type="text/css" href='/resources/secrets/style.css' integrity="sha256-8UuMd+tTlcS/tdOqDyopFZrAX3oicEYQ6CaqqiaOWrg="> !-->
+	<link rel='stylesheet' type="text/css" href='/resources/secrets/style.css' >
 	<script type="application/javascript" src="/resources/qrcodejs/qrcode.js" integrity="sha256-Puct6facZo+VZzY6k1jflVlguukADZ69ZkFGcPiOhzU="></script>
 	<script type="application/javascript" src="/resources/lz-string/libs/lz-string.js" integrity="sha256-VKnqrEjU/F8ZC4hVDG+ULG96+VduFx/l3iTBag26gsM="></script>
 	<script type="application/javascript" src="/resources/crypto-js/crypto-js.js" integrity="sha256-u605MhHOcevkqVw8DJ2q3X7kZTVTVXot4PjxIucLiMM="></script>
-	<script type="application/javascript" src="/resources/secrets/script.js" integrity="sha256-wg/WXYgZzXO32Dz+3KS6VI+NThKdzCo68BF+Gqsf4qQ="></script>
+	<!--<script type="application/javascript" src="/resources/secrets/script.js" integrity="sha256-cB+XlxFbGyvbUOtsrMuR2WR3PG7ycUpbkSViOvuTsGk="></script>!-->
+	<script type="application/javascript" src="/resources/secrets/script.js" ></script>
 </head>
-<body>
+<body <?php if(isset($_GET["id"])){echo "onload='add_password_box()'";} ?>>
 	<div class='header'>
 		<div class='title'><a href="<?php echo $path;?>">Self Destructing Notes</a></div>
 		<div class='menu'>
@@ -91,7 +93,7 @@ if($_SERVER["REQUEST_METHOD"] == "GET"){
 			if($res->num_rows != 0){?>
 				<h3>Once you proceed, the note will be shown to you and destroyed from the server.</h3>
 				<h3>This cannot be undone.</h3>
-				<button class="proceed" onclick="fetch_note()">View note</button>
+				<div id="op-box"><button class="proceed" onclick="fetch_note()">View note</button></div>
 				<?php
 			}else{
 				http_response_code(404);
@@ -104,13 +106,13 @@ if($_SERVER["REQUEST_METHOD"] == "GET"){
 				<textarea class="fill" name="note" placeholder="Enter secrets"></textarea>
 				<input type="hidden" name="id" value="<?php echo $id ?>"/>
 				<div class="row fill">
-					<span>Optional Password: <input type="text" name="op" /></span>
+					<span>Optional Password: <input type="text" name="op" autocomplete='off' /></span>
 					<input type="submit" value="Submit Note"/>
 				</div>
 			</form>
 			<?php	
 		}else if(isset($_GET["about"])){ ?>
-			<div class="fill left-align">
+			<div class="fill left-align text">
 				<h2>About <?php echo $_SERVER["SERVER_NAME"] ?></h2>
 				<p> This is an open source destructing notes website. Any note is destroyed after being read for the first time and all
 				information is hidden from the server and will atomatically expire <?php echo $days_timeout ?> days after being created.</p>
@@ -147,11 +149,14 @@ if($_SERVER["REQUEST_METHOD"] == "GET"){
 				<p>A SHA256 fingerprint is used because as of right now the only way to get the values out of a SHA256 hash is to know what it
 				is, or to brute force every combination until you find what works. The fingerprint is used by the server to ensure that you 
 				have all the correct information before sending the encrypted message to slow down an attacker and protect the message.</p>
+				<h3>This site sends a cookie</h3>
+				<p>To have the plug and play functionality of the framework that manages the database for this service it does set a cookie <em>PHPSESSID</em>. To ensure privacy this also sets the cookie to expire immediately so it is never sent back to the server in following requests.</p>
 				<h3>Are there backdoors?</h3>
 				<p>Not in the default source code. Make sure you trust the server or you can check the checksum values in the html head against the ones
 				in the source code to make sure none of the external resources have been modified.</p>
-				<p>Additionally you should check the html code to make sure there are no &lt;script&gt;	with any javascript programmed into it.</p>
-				
+				<br>
+				<p>Additionally you should check the html code to make sure there are no &lt;script&gt;	tags with any javascript programmed inside.
+				There should only be 4: CryptoJS, lz-string, qrcode, and the main script.</p>
 			</div>
 		<?php	}else{
 			echo "Error ".$_SERVER["REDIRECT_STATUS"];
